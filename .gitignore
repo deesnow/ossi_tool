@@ -1,0 +1,14 @@
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+
+# Input or output csv files. It is used for testing
+*.csv
+
+# Debug log
+*.log
