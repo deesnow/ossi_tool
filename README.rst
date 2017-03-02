@@ -16,3 +16,10 @@ As input arguments need to define the followings:
 Usage example:
 
 ./ossit 192.168.10.10 sampleuser -ppassword -i commands.csv -o outputfile.csv
+
+----------
+Installation:
+
+You can easily install ossi_tool with pip.
+Usage
+#pip install ossi_tool
