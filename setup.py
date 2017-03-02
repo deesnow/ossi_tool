@@ -11,7 +11,6 @@ setup(name='ossi_tool',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
-        'License :: OSI Approved :: ISC License',
         'Programming Language :: Python :: 2.7',
         'Intended Audience :: Telecommunications Industry',
         'Topic :: Communications :: Telephony',
