@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# This Python file uses the following encoding: utf-8
+# -*- coding: utf-8 -*-
 
 from pexpect import pxssh
 import getpass
@@ -7,6 +6,8 @@ import argparse
 # import os
 import csv
 import re
+
+__version__ = "0.1.0"
 
 """
 Handle imput paramaters
@@ -62,7 +63,7 @@ class Ossi(object):
         self.host = host
         self.username = username
         self.password = password
-        print self.host, self.username, self.password
+        # print self.host, self.username, self.password
         try:
             self.s = pxssh.pxssh()
             # hostname = raw_input('hostname: ')
@@ -214,14 +215,18 @@ class Ossi(object):
                 print ("Failed to open: ", self.outputfile)
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Main modul of ossi script.
+
+    Bring things together.
+    """
     print 'Let Start!'
     a = Ossi()
     if args.password is not None:
         password = args.password
     else:
         password = getpass.getpass('password: ')
-    print password
     a.ossi_open(args.host, args.username, password)
     # print args.inputfile
     # print a.cmd_parser(args.inputfile)
