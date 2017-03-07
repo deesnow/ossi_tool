@@ -10,7 +10,9 @@ version = re.search(
 with open("README.rst", "rb") as f:
     long_descr = f.read().decode("utf-8")
 
+
 def readme():
+    """ Long description from readme file"""
     with open('README.rst') as f:
         return f.read()
 

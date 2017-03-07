@@ -51,6 +51,7 @@ class Ossi(object):
         """
         self.cmd_error = 0
         self.debug = args.debug
+        self.ossi_alive = False
 
     def ossi_open(self, host, username, password):
         """
@@ -79,6 +80,7 @@ class Ossi(object):
             self.s.sendline('ossit')
             self.s.expect('t')             # match the prompt
             print ' - ossi is logged in and ready - '
+            self.ossi_alive = self.s.isalive()
         except pxssh.ExceptionPxssh as self.e:
             print("pxssh failed on login.")
             print(self.e)
@@ -230,5 +232,8 @@ def main():
     a.ossi_open(args.host, args.username, password)
     # print args.inputfile
     # print a.cmd_parser(args.inputfile)
-    a.cmd_parser(args.inputfile)
-    a.ossi_close()
+
+    if a.ossi_alive is True:
+        a.cmd_parser(args.inputfile)
+        a.ossi_close()
+    print 'Script running is finished'
