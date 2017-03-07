@@ -15,7 +15,7 @@ As input arguments need to define the followings:
 
 Usage example:
 
-./ossi_tool 192.168.10.10 sampleuser -ppassword -i commands.csv -o outputfile.csv
+#ossi_tool 192.168.10.10 sampleuser -ppassword -i commands.csv -o outputfile.csv
 
 ----------
 Installation:
