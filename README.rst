@@ -13,6 +13,8 @@ As input arguments need to define the followings:
     - Input file
     - Output file
 
+For all available option use "ossi_tool -h" 
+
 Usage example:
 
 #ossi_tool 192.168.10.10 sampleuser -ppassword -i commands.csv -o outputfile.csv
