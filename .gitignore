@@ -12,3 +12,6 @@
 
 # Debug log
 *.log
+.vscode/launch.json
+.vscode/settings.json
+.gitignore
