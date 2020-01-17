@@ -103,7 +103,7 @@ class Ossi(object):
             self.s.logout()
             print '--- Ossi logged out ---'
             if self.cmd_error is not 0:
-                print '*** {0} numbers of command were send to ossi. Please check the logs! ***'.format(self.cmd_error)
+                print '*** {0} numbers of command were send to ossi, but it Failed. Please check the logs! ***'.format(self.cmd_error)
         except pxssh.ExceptionPxssh as self.e:
             print("pxssh failed on logoff.")
             print(self.e)
@@ -177,25 +177,30 @@ class Ossi(object):
             # print '--line'
             # print line
             # print '----'
-            if re.match('\rd.*', self.line):
+            self.result = self.line.lstrip().rstrip()
+            if re.match('^d', self.result):
+                self.result = self.result.lstrip('d')
                 
-                self.result = re.findall('[^\rd].*[^\r]', self.line)
+                #self.result = re.findall('[^\rd].*[^\r]', self.line) # replaced by lstrip() and rtrip()
                 if len(self.result) is not 0:
                     if len(self.page_data) > 0:
                         if self.new_record is False:
                             self.page_data.append(',')
-                        self.page_data.append(re.sub('\t', ',', self.result[0]))
+                        self.page_data.append(re.sub('\t', ',', self.result))
                         self.new_record = False
                         
                         # print page_data
                     else:
-                        self.page_data.append(re.sub('\t', ',', self.result[0]))
+                        self.page_data.append(re.sub('\t', ',', self.result))
                         self.new_record = False
                         # print page_data
-            elif re.match('\rn.*', self.line):
+            elif re.match('^n', self.result):
                 # print " -- record end ---"
                 self.page_data.append('\n')
                 self.new_record = True
+            
+            
+
         # print '*** page data ***'
         # print ''.join(page_data)
         return ''.join(self.page_data)
