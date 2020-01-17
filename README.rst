@@ -19,7 +19,7 @@ Usage example:
 
 #ossi_tool 192.168.10.10 sampleuser -ppassword -i commands.csv -o outputfile.csv
 
-----------
+---------------------
 Installation (Linux):
 ---------------------
 
@@ -27,9 +27,9 @@ You can easily install ossi_tool with pip. It takes care about the prerequisits.
 Usage
 #pip install ossi_tool
 
-----------
+------------------------
 Installation (Windows):
----------------------
+------------------------
 
 Due to lack of ssh on windows command line, a good alternative to use Cygwin to get linux like
 shell on windows machine. Download it from here:
@@ -41,9 +41,9 @@ $ pip install ossi_tool
 
 ossi_tool is ready to use ;)
 
------------
+---------------------
 Known issues
--------------
+---------------------
 
 - If the RSA key of the host where want to connect not in the .ssh/known_hosts file, than it drops an exception.
     Workaround:
