@@ -122,7 +122,10 @@ class Ossi(object):
             self.s.logout()
             print '--- Ossi logged out ---'
             if self.cmd_error is not 0:
-                print '*** {0} numbers of command were send to ossi, but it Failed. Please check the logs! ***'.format(self.cmd_error)
+                print '*** {0} commands are failed ***'.format(self.cmd_error)
+                for self.key in self.failed_cmd:
+                    print '{0} --- {1}'.format(self.key, self.failed_cmd[self.key])
+                print'*** End of Errors ***'
         except pxssh.ExceptionPxssh as self.e:
             print("pxssh failed on logoff.")
             print(self.e)
@@ -169,13 +172,14 @@ class Ossi(object):
         self.command = command
         if self.command is not None:
             self.cmd_result = []
+            self.failed_cmd = {}
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
-            self.index = self.s.expect(['\rmore..y.', 'f.*t\r\n\r', 'e1.*invalid entry;'])
+            self.index = self.s.expect(['\rmore..y.', 'f.*t\r\n\r', 'e1.*'])
             if self.index == 2:
-                print '-- Invalid command --'
-                print self.s.after
+                print '-- Command Error --'
                 self.cmd_error += 1
+                self.failed_cmd[str(self.command)] = self.s.after  
             else:
                 while self.index == 0:
 
