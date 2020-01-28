@@ -24,8 +24,8 @@ parser.add_argument("-o", "--outputfile", help="Output file name")
 parser.add_argument("-v", "--debug", help="Trun ON the debug logging of OSSI terminal. \
                     Debugis loggeg into the debug.log", action='count')
 # Planned feature
-# parser.add_argument("-c", "--command", help="CM command as a string; \
-#                     eg 'display station xxxx'")
+parser.add_argument("-c", "--command", help="CM command as a string; \
+                     eg. <display station xxxx>")
 # parser.add_argument("-f", "--fieldID", help="FieldID /what you want t change/")
 # parser.add_argument("-d", "--data", help="data for change command")
 args = parser.parse_args()
@@ -70,17 +70,36 @@ class Ossi(object):
             # hostname = raw_input('hostname: ')
             # username = raw_input('username: ')
             # print args.host, args.username, password
-            self.s.login(self.host, self.username, self.password, terminal_type='vt100', original_prompt='[#$>t\]]')
             if self.debug is not None:
                 self.s.logfile = open("debug.log", "wb")
-            self.s.timeout = 5
-            print " - Connection established - "
-            self.s.sendline('sat')   # run a command
-            self.s.expect('Terminal Type.*')             # match the prompt
-            self.s.sendline('ossit')
-            self.s.expect('t')             # match the prompt
-            print ' - ossi is logged in and ready - '
-            self.ossi_alive = self.s.isalive()
+            try:
+                self.s.login(self.host, self.username, self.password, terminal_type='vt100', original_prompt='[#$>t\]]')
+                self.s.timeout = 5
+                print " - Connection established - "
+                self.s.sendline('sat')   # run a command
+                try:
+                    self.s.expect('Terminal Type.*')             # match the prompts
+                    self.s.sendline('ossit')
+                    try:
+                        self.s.expect('t')             # match the prompt
+                        print ' - ossi is logged in and ready - '
+                        self.ossi_alive = self.s.isalive()
+                    except Exception as identifier:
+                        print 'Did not recognized ossi terminal prompt'
+                        self.ossi_alive = False
+                except Exception as identifier:
+                    print 'Did not recognized prompt for Terminal Type'
+                    self.ossi_alive = False
+                 
+            except Exception as identifier:
+                print 'Login failed', self.s.before
+                self.ossi_alive = False
+            
+            
+            
+                    
+            
+            
         except pxssh.ExceptionPxssh as self.e:
             print("pxssh failed on login.")
             print(self.e)
@@ -128,6 +147,18 @@ class Ossi(object):
                     self.output_writer('-------- \n{0}\n--------\n'.format(' '.join(self.row)))
                     self.ossi_cmd(' '.join(self.row))
 
+    def prompt(self, timeout=-1):
+
+        if timeout == -1:
+            timeout = self.timeout
+        try:
+            i = self.s.expect(['\rmore..y.'], timeout=timeout)
+            return True
+        except Exception as e:
+            #print (e)
+            return False
+                  
+       
     def ossi_cmd(self, command):
         """
         Send 'command' to ossi terminal, and read the output.
@@ -140,23 +171,36 @@ class Ossi(object):
             self.cmd_result = []
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
-            self.index = self.s.expect(['more..y.', 'f.*t\r\n\r', 'e1.*invalid entry;'])
+            self.index = self.s.expect(['\rmore..y.', 'f.*t\r\n\r', 'e1.*invalid entry;'])
             if self.index == 2:
                 print '-- Invalid command --'
                 print self.s.after
                 self.cmd_error += 1
             else:
                 while self.index == 0:
-                    if self.index == 0:
-                        self.cmd_result.append(self.data_parse(self.s.before))
-                        self.s.sendline('y')
+
+                    self.cmd_result.append(self.data_parse(self.s.before))
+                    self.s.sendline('y')
+                    
+
+                    if self.prompt(2):
+                        pass
                     else:
-                        self.cmd_result.append(self.data_parse(self.s.after))
-                    # check promt
-                    self.index = self.s.expect(['more..y.', 'd.*t\r\n\r'])
+                        #self.cmd_result.append(self.data_parse(self.s.after))
+                        self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
+
+                    
+                    # if re.match('\rmore..y.', self.s.after):
+                    #     print('bingo')
+                    #     self.index = self.s.expect(['\rmore..y.', '\rd\r\n\rt\r\n\r'])
+                        
+                    # else:
+                    #     self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
+
+                    
                     # print '------cycle-------'
                     # print '--- ', index, ' -------'
-                self.cmd_result.append(self.data_parse(self.s.after))
+                self.cmd_result.append(self.data_parse(self.s.before))
                 self.cmd_result.append('\n')
                 # print '---- last data ---'
                 print ''.join(self.cmd_result)
@@ -239,6 +283,13 @@ def main():
     # print a.cmd_parser(args.inputfile)
 
     if a.ossi_alive is True:
-        a.cmd_parser(args.inputfile)
-        a.ossi_close()
+        if args.inputfile is not None and args.command is None:
+            a.cmd_parser(args.inputfile)
+            
+        elif args.inputfile is None and args.command is not None:
+            a.ossi_cmd(args.command)
+            
+        else:
+            print('There is neither an input csv file neither a command to execute')
+    a.ossi_close()
     print 'Script running is finished'
