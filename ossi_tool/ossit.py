@@ -66,7 +66,7 @@ class Ossi(object):
         self.password = password
         # print self.host, self.username, self.password
         try:
-            self.s = pxssh.pxssh()
+            self.s = pxssh.pxssh(options={"StrictHostKeyChecking": "no"})
             # hostname = raw_input('hostname: ')
             # username = raw_input('username: ')
             # print args.host, args.username, password

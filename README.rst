@@ -23,21 +23,27 @@ Usage example:
 Installation (Linux):
 ---------------------
 
-You can easily install ossi_tool with pip. It takes care about the prerequisits.
-Usage
-#pip install ossi_tool
+In most Linux distribution the Python 2.7 is installed.
+
+Ossi_tool can be easily installed by pip, it takes care about other prerequisits.
+- Check python version
+- Install pip           $  easy_install-2.7 pip
+- Install ossi_tool     $ pip install ossi_tool
+
+ossi_tool is ready to use ;)
 
 ------------------------
 Installation (Windows):
 ------------------------
 
-Due to lack of ssh on windows command line, a good alternative to use Cygwin to get linux like
-shell on windows machine. Download it from here:
-https://www.cygwin.com/
-Run the installer, and at the package selection add the python, and python-setuptools.
-If the cygwin is ready to use, open the cygwin terminal, and install pip, and finally the ossi_tool
-$  easy_install-2.7 pip
-$ pip install ossi_tool
+Because the ossi tool use pexpect wich is not compatible with Windows Powershell SSH client,
+on Windows Linux Subsystem (WLS) should be used. You can chose many linux disctribution as
+subsystem.
+https://docs.microsoft.com/en-us/windows/wsl/install-win10
+When the WLS is ready to use all other step same like Linux usage.
+- Install Python
+- Install pip           $  easy_install-2.7 pip
+- Install ossi_tool     $ pip install ossi_tool
 
 ossi_tool is ready to use ;)
 
