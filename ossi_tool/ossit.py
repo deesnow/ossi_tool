@@ -176,11 +176,22 @@ class Ossi(object):
             self.failed_cmd = {}
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
-            self.index = self.s.expect(['\rmore..y.', 'e1.*'])
+            self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
             if self.index == 1:
                 print '-- Command Error --'
                 self.cmd_error += 1
                 self.failed_cmd[str(self.command)] = self.s.after
+            elif self.index == 2:
+               self.cmd_raw_result += self.s.after
+               #Call command output parser
+               self.cmd_result = self.data_parse(self.cmd_raw_result)
+                
+               # print '---- last data ---'
+
+                
+               self.output_writer(self.cmd_result)
+               self.output_writer('\n')
+            
                           
             else:
                 while self.index == 0:
