@@ -20,6 +20,7 @@ setup(name='ossi_tool',
       version=version,
       description='Tool to creact CSV output from Avaya Communcation Manager commands.',
       long_description=long_descr,
+      long_description_content_type='text/plain', # text/plain, text/x-rst, text/markdown
       classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
