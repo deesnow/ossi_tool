@@ -7,7 +7,7 @@ import argparse
 import csv
 import re
 
-__version__ = "0.3.3"
+__version__ = "0.3.3.1"
 
 """
 Handle imput paramaters

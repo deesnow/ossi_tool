@@ -59,6 +59,4 @@ ossi_tool is ready to use ;)
 Known issues
 ---------------------
 
-- If the RSA key of the host where want to connect not in the .ssh/known_hosts file, than it drops an exception.
-    Workaround:
-    ssh to the host with regular ssh and accept the RSA key.
+- 
