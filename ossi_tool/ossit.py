@@ -7,7 +7,7 @@ import argparse
 import csv
 import re
 
-__version__ = "0.3.3.1"
+__version__ = "0.3.3.2"
 
 """
 Handle imput paramaters
@@ -150,8 +150,10 @@ class Ossi(object):
                     self.output_writer('-------- \n{0}\n--------\n'.format(' '.join(self.row)))
                     self.ossi_cmd(' '.join(self.row))
 
-    def prompt(self, timeout=-1):
+    def ossi_prompt(self, timeout=-1):
 
+        
+    
         if timeout == -1:
             timeout = self.timeout
         try:
@@ -176,45 +178,44 @@ class Ossi(object):
             self.failed_cmd = {}
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
-            self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
-            if self.index == 1:
-                print '-- Command Error --'
-                self.cmd_error += 1
-                self.failed_cmd[str(self.command)] = self.s.after
-            elif self.index == 2:
-               self.cmd_raw_result += self.s.after
-               #Call command output parser
-               self.cmd_result = self.data_parse(self.cmd_raw_result)
-                
-               # print '---- last data ---'
 
-                
-               self.output_writer(self.cmd_result)
-               self.output_writer('\n')
-            
-                          
-            else:
+            if self.ossi_prompt(2):
+                self.index = 0
                 while self.index == 0:
-
+    
                     self.cmd_raw_result += self.s.before
                     self.s.sendline('y')
-                    
+                        
 
-                    if self.prompt(2):
+                    if self.ossi_prompt(2):
                         pass
                     else:
                         self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
-                    
-                self.cmd_raw_result += self.s.before
-
-                #Call command output parser
-                self.cmd_result = self.data_parse(self.cmd_raw_result)
+                        self.cmd_raw_result += self.s.before
+           
                 
-                # print '---- last data ---'
+
+            else:
+                self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
+                if self.index == 1:
+                    print '-- Command Error --'
+                    self.cmd_error += 1
+                    self.failed_cmd[str(self.command)] = self.s.after
+                elif self.index == 2:
+                    self.cmd_raw_result += self.s.after
+            
+
+            #Call command output parser
+            self.cmd_result = self.data_parse(self.cmd_raw_result)
+                
+            # print '---- last data ---'
 
                 
-                self.output_writer(self.cmd_result)
-                self.output_writer('\n')
+            self.output_writer(self.cmd_result)
+            self.output_writer('\n')
+            
+                     
+
 
     def data_parse(self, data):
         """
@@ -226,14 +227,19 @@ class Ossi(object):
         self.page_data = ""
         self.fields = 0
         self.new_record = True
-        self.command_pass = False
+        
         self.lines = self.data.split('\n')
 
         for self.line in self.lines:
             self.line = self.line.lstrip().rstrip()
             if re.match('^f', self.line):
                 self.fields = self.line.count('\t') + 1
-                self.command_pass = True
+                
+            elif re.match('^e', self.line):
+                self.result = self.line.lstrip('e')
+                self.page_data += self.result
+                
+
             elif re.match('^d', self.line):
                 self.result = self.line.lstrip('d')
                 if len(self.result) is not 0:
@@ -245,12 +251,10 @@ class Ossi(object):
                     else:
                         self.page_data += re.sub('\t', ',', self.result)
                         self.new_record = False
-            elif re.match('n', self.line):
+            elif re.match('^n', self.line):
                 self.page_data += "\n"
                 self.new_record = True
-            elif re.match('t', self.line):
-                if self.command_pass:
-                    break
+            
   
             
             
@@ -261,44 +265,6 @@ class Ossi(object):
         return self.page_data
 
     
-
-    
-    
-    # def multi_line_record_process(self):
-
-    #     for self.line in self.lines:
-    #         # print '--line'
-    #         # print line
-    #         # print '----'
-    #         self.result = self.line.lstrip().rstrip()
-    #         if re.match('^d', self.result):
-    #             self.result = self.result.lstrip('d')
-                
-    #             #self.result = re.findall('[^\rd].*[^\r]', self.line) # replaced by lstrip() and rtrip()
-    #             if len(self.result) is not 0:
-    #                 if len(self.page_data) > 0:
-    #                     if self.new_record is False:
-    #                         self.page_data.append(',')
-    #                     self.page_data.append(re.sub('\t', ',', self.result))
-    #                     self.new_record = False
-                        
-    #                     # print page_data
-    #                 else:
-    #                     self.page_data.append(re.sub('\t', ',', self.result))
-    #                     self.new_record = False
-    #                     # print page_data
-    #         elif re.match('^n', self.result):
-    #             # print " -- record end ---"
-    #             self.page_data.append('\n')
-    #             self.new_record = True
-
-
-            
-
-
-
-
-
     def output_writer(self, output):
         """
         Write 'output' object into the outputfile.
@@ -337,6 +303,8 @@ def main():
             a.cmd_parser(args.inputfile)
             
         elif args.inputfile is None and args.command is not None:
+            print '-------- \n\r{0}\n\r--------'.format(args.command)
+            a.output_writer('-------- \n{0}\n--------\n'.format(args.command))
             a.ossi_cmd(args.command)
             
         else:
