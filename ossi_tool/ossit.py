@@ -146,9 +146,11 @@ class Ossi(object):
             else:
                 for self.row in self.info:
                     # self.row_cmd = ' '.join(self.row)
-                    print '-------- \n\r{0}\n\r--------'.format(' '.join(self.row))
-                    self.output_writer('-------- \n{0}\n--------\n'.format(' '.join(self.row)))
-                    self.ossi_cmd(' '.join(self.row))
+                    self.cmd = ' '.join(self.row)
+                    if len(self.cmd.translate(None, ' \n\t\r')) > 0:
+                        print '-------- \n\r{0}\n\r--------'.format(self.cmd)
+                        self.output_writer('-------- \n{0}\n--------\n'.format(self.cmd))
+                        self.ossi_cmd(self.cmd)
 
     def ossi_prompt(self, timeout=-1):
 
