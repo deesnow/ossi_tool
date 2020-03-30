@@ -1,0 +1,10 @@
+-------
+Version 0.3.3.4
+-------
+
+- Added '-n' option to list of parameters.
+
+Without '-n' all command is repeated in the output (both console and output.csv).
+With '-n' only the pure csv output is sent to console and output file. In case of
+multiple commands (with -i) an empty line separate the commands.
+
