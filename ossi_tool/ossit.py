@@ -7,7 +7,7 @@ import argparse
 import csv
 import re
 
-__version__ = "0.3.3.4"
+__version__ = "0.3.3.5"
 
 """
 Handle imput paramaters
@@ -28,6 +28,12 @@ parser.add_argument("-v", "--debug", help="Trun ON the debug logging of OSSI ter
 # Planned feature
 parser.add_argument("-c", "--command", help="CM command as a string; \
                      eg. <display station xxxx>")
+parser.add_argument("-t", "--prompt_timeout", help="Finetuning timeout for promp recognition in seconds; \
+                     Default settings is 2 seconds, but it can be decreased to around 0.5-0.2 sec. \
+                     Be careful!\
+                     Too low number can lead to wrong behavior and script crash. \
+                     Test every command to get proper number, and do not mix commands in\
+                     input file with that option.")                     
 # parser.add_argument("-f", "--fieldID", help="FieldID /what you want t change/")
 # parser.add_argument("-d", "--data", help="data for change command")
 args = parser.parse_args()
@@ -55,6 +61,10 @@ class Ossi(object):
         self.debug = args.debug
         self.ossi_alive = False
         self.no_echo = args.no_echo
+        if args.prompt_timeout is not None:
+            self.timeout = args.prompt_timeout
+        else:
+            self.timeout = 2
 
     def ossi_open(self, host, username, password):
         """
@@ -69,14 +79,15 @@ class Ossi(object):
         self.password = password
         # print self.host, self.username, self.password
         try:
-            self.s = pxssh.pxssh(options={"StrictHostKeyChecking": "no"})
+            self.s = pxssh.pxssh(options={"StrictHostKeyChecking": "no",
+                                          "UserKnownHostsFile": "/dev/null"})
             # hostname = raw_input('hostname: ')
             # username = raw_input('username: ')
             # print args.host, args.username, password
             if self.debug is not None:
                 self.s.logfile = open("debug.log", "wb")
             try:
-                self.s.login(self.host, self.username, self.password, terminal_type='vt100', original_prompt='[#$>t\]]')
+                self.s.login(self.host, self.username, self.password, terminal_type='vt100', original_prompt='[#$>t\]]', password_regex='(?i)(?:password:)')
                 self.s.timeout = 5
                 if self.no_echo is None:
                     print "--- Connection established ---"
@@ -163,14 +174,10 @@ class Ossi(object):
                         self.ossi_cmd(self.cmd)
 
 
-    def ossi_prompt(self, timeout=-1):
-
+    def ossi_prompt(self):
         
-    
-        if timeout == -1:
-            timeout = self.timeout
         try:
-            i = self.s.expect(['\rmore..y.'], timeout=timeout)
+            i = self.s.expect(['\rmore..y.'], timeout=self.timeout)
             return True
         except Exception as e:
             #print (e)
@@ -192,7 +199,7 @@ class Ossi(object):
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
 
-            if self.ossi_prompt(2):
+            if self.ossi_prompt():
                 self.index = 0
                 while self.index == 0:
     
@@ -200,7 +207,7 @@ class Ossi(object):
                     self.s.sendline('y')
                         
 
-                    if self.ossi_prompt(2):
+                    if self.ossi_prompt():
                         pass
                     else:
                         self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
