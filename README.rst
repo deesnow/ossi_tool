@@ -100,6 +100,6 @@ Chat with me here
 
 If you have new Idea, or just one to help me to test feel free to join my Discord server
 
-`Avaya_Aura_Scriping`_
+`Avaya Aura Scriping`_
 
-.. _Avaya_Aura_Scriping: https://discord.gg/wa6MGjt
+.. _Avaya Aura Scriping: https://discord.gg/wa6MGjt
