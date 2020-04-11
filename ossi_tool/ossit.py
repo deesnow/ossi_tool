@@ -7,7 +7,7 @@ import argparse
 import csv
 import re
 
-__version__ = "0.3.3.5"
+__version__ = "0.3.3.6"
 
 """
 Handle imput paramaters
@@ -198,9 +198,10 @@ class Ossi(object):
             self.failed_cmd = {}
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
+            self.index = 0
 
             if self.ossi_prompt():
-                self.index = 0
+                
                 while self.index == 0:
     
                     self.cmd_raw_result += self.s.before
@@ -216,24 +217,29 @@ class Ossi(object):
                 
 
             else:
-                self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
-                if self.index == 1:
-                    if self.no_echo is None:
-                        print '-- Command Error --'
-                    self.cmd_error += 1
-                    self.failed_cmd[str(self.command)] = self.s.after
-                elif self.index == 2:
-                    self.cmd_raw_result += self.s.after
+                try:
+                    self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
+
+                    if self.index == 1:
+                        if self.no_echo is None:
+                            print '-- Command Error --'
+                        self.cmd_error += 1
+                        self.failed_cmd[str(self.command)] = self.s.after
+                    elif self.index == 2:
+                        self.cmd_raw_result += self.s.after
+                except:
+                    if self.s.expect(['\rt\r\n\r']):
+                        self.index = 3
             
+            if self.index != 3:
+                #Call command output parser
+                self.cmd_result = self.data_parse(self.cmd_raw_result)
+                self.output_writer(self.cmd_result)
+                self.output_writer('\n\n')
+              
+                # print '---- last data ---'
 
-            #Call command output parser
-            self.cmd_result = self.data_parse(self.cmd_raw_result)
                 
-            # print '---- last data ---'
-
-                
-            self.output_writer(self.cmd_result)
-            self.output_writer('\n\n')
             
                      
 
