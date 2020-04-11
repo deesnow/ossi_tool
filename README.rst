@@ -93,3 +93,12 @@ Known issues
 Check the project `GitHub page`_
 
 .. _GitHub page: https://github.com/deesnow/ossi_tool/issues
+
+
+Chat with me here
+---------------------
+
+If you have new Idea, or just one to help me to test feel free to join my Discord server
+
+`Avaya Aura Scriping`_
+.. _Avaya Aura Scriping: https://discord.gg/TDbjHb
