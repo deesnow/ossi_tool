@@ -7,7 +7,7 @@ import argparse
 import csv
 import re
 
-__version__ = "0.3.3.6"
+__version__ = "0.3.3.7"
 
 """
 Handle imput paramaters
@@ -182,6 +182,31 @@ class Ossi(object):
         except Exception as e:
             #print (e)
             return False
+
+    def all_prompt(self):
+        self.timeout = 0.2
+        self.prompt_list = ['\rmore..y.', 'e1.*', 'f.*', '\rd\r\n\rt\r\n\r' , '\rd*t\r\n\r', '\rt\r\n\r']
+        self.match = False
+
+        while self.match == False:
+            for i in self.prompt_list:
+                #iterate trough the possible prompt
+                 
+                try:
+                    self.s.expect([i], timeout=self.timeout)
+                    self.index = self.prompt_list.index(i)
+                    self.match = True
+                    break
+                except:
+                    pass
+            
+            if self.timeout < 6:
+                self.timeout *= 2
+            else:
+                self.index = 'error'
+                self.match = True
+
+        return self.index
                   
        
     def ossi_cmd(self, command):
@@ -198,44 +223,83 @@ class Ossi(object):
             self.failed_cmd = {}
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
-            self.index = 0
+            self.index = self.all_prompt()
+            
 
-            if self.ossi_prompt():
+            
                 
-                while self.index == 0:
-    
-                    self.cmd_raw_result += self.s.before
-                    self.s.sendline('y')
-                        
+            while self.index == 0:
+        
+                self.cmd_raw_result += self.s.before
+                self.s.sendline('y')
+                self.index = self.all_prompt()
+            
 
-                    if self.ossi_prompt():
-                        pass
-                    else:
-                        self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
-                        self.cmd_raw_result += self.s.before
-           
-                
-
-            else:
-                try:
-                    self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
-
-                    if self.index == 1:
-                        if self.no_echo is None:
-                            print '-- Command Error --'
+            if self.index == 1:
+                if self.no_echo is None:
+                        print '-- Command Error --'
                         self.cmd_error += 1
                         self.failed_cmd[str(self.command)] = self.s.after
-                    elif self.index == 2:
-                        self.cmd_raw_result += self.s.after
-                except:
-                    if self.s.expect(['\rt\r\n\r']):
-                        self.index = 3
+
+            elif self.index == 2:
+                self.cmd_raw_result += self.s.after
+
             
-            if self.index != 3:
-                #Call command output parser
-                self.cmd_result = self.data_parse(self.cmd_raw_result)
-                self.output_writer(self.cmd_result)
-                self.output_writer('\n\n')
+            elif self.index == 3:
+                self.cmd_raw_result += self.s.before
+
+            elif self.index == 4:
+                self.cmd_raw_result += self.s.before
+
+            elif self.index == 5:
+                pass
+
+            elif self.index == "error":
+                if self.no_echo is None:
+                        print '-- Prompt not matched --'
+                        self.cmd_error += 1
+                        self.failed_cmd[str(self.command)] = self.s.after
+
+            #Call command output parser
+            self.cmd_result = self.data_parse(self.cmd_raw_result)
+            self.output_writer(self.cmd_result)
+            self.output_writer('\n\n')
+
+
+
+
+                        
+
+                    
+           
+            # if self.ossi_prompt():
+            #             pass
+            #         else:
+            #             self.index = self.s.expect(['####fake', '\rd\r\n\rt\r\n\r', '\rd*t\r\n\r'])
+            #             self.cmd_raw_result += self.s.before    
+
+
+
+            # else:
+            #     try:
+            #         self.index = self.s.expect(['\rmore..y.', 'e1.*', 'f.*'])
+
+            #         if self.index == 1:
+            #             if self.no_echo is None:
+            #                 print '-- Command Error --'
+            #             self.cmd_error += 1
+            #             self.failed_cmd[str(self.command)] = self.s.after
+            #         elif self.index == 2:
+            #             self.cmd_raw_result += self.s.after
+            #     except:
+            #         if self.s.expect(['\rt\r\n\r']) == 0:
+            #             self.index = 3
+            
+            # if self.index != 3:
+            #     #Call command output parser
+            #     self.cmd_result = self.data_parse(self.cmd_raw_result)
+            #     self.output_writer(self.cmd_result)
+            #     self.output_writer('\n\n')
               
                 # print '---- last data ---'
 
