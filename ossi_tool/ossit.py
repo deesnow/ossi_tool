@@ -3,11 +3,12 @@
 from pexpect import pxssh
 import getpass
 import argparse
-# import os
+import time
 import csv
 import re
+import commandEnum
 
-__version__ = "0.3.3.7"
+__version__ = "0.4"
 
 """
 Handle imput paramaters
@@ -25,15 +26,19 @@ parser.add_argument("-n", "--no_echo", help="Trun Off the command repetition in 
                             , action='count')
 parser.add_argument("-v", "--debug", help="Trun ON the debug logging of OSSI terminal. \
                     Debugis loggeg into the debug.log", action='count')
-# Planned feature
+
 parser.add_argument("-c", "--command", help="CM command as a string; \
                      eg. <display station xxxx>")
-parser.add_argument("-t", "--prompt_timeout", help="Finetuning timeout for promp recognition in seconds; \
-                     Default settings is 2 seconds, but it can be decreased to around 0.5-0.2 sec. \
-                     Be careful!\
-                     Too low number can lead to wrong behavior and script crash. \
-                     Test every command to get proper number, and do not mix commands in\
-                     input file with that option.")                     
+
+# Obsolate feature
+#                      
+# parser.add_argument("-t", "--prompt_timeout", help="Finetuning timeout for promp recognition in seconds; \
+#                      Default settings is 2 seconds, but it can be decreased to around 0.5-0.2 sec. \
+#                      Be careful!\
+#                      Too low number can lead to wrong behavior and script crash. \
+#                      Test every command to get proper number, and do not mix commands in\
+#                      input file with that option.")
+
 # parser.add_argument("-f", "--fieldID", help="FieldID /what you want t change/")
 # parser.add_argument("-d", "--data", help="data for change command")
 args = parser.parse_args()
@@ -58,14 +63,19 @@ class Ossi(object):
         Init the base object with some default variables.
         """
         self.cmd_error = 0
+        self.failed_cmd = {}
         self.debug = args.debug
         self.ossi_alive = False
         self.no_echo = args.no_echo
+        self.timeout = 5
+        """ 
+        Changed timeout handling
+
         if args.prompt_timeout is not None:
             self.timeout = args.prompt_timeout
         else:
             self.timeout = 2
-
+        """
     def ossi_open(self, host, username, password):
         """
         Ssh ession opening, and switch to ossi termnal.
@@ -129,6 +139,7 @@ class Ossi(object):
         """
         try:
             # print (' - Logging out from ossi - ')
+            self.s.timeout = 5
             self.s.sendline('clogoff')
             self.s.sendline('t')
             self.s.expect('Proceed With Logoff.*')
@@ -172,6 +183,8 @@ class Ossi(object):
                             self.output_writer('-------- \n{0}\n--------\n'.format(self.cmd))
                             
                         self.ossi_cmd(self.cmd)
+                    
+                self.error_dump() # write failed commands and connected error message into the output file
 
 
     def ossi_prompt(self):
@@ -184,21 +197,25 @@ class Ossi(object):
             return False
 
     def all_prompt(self):
-        self.timeout = 0.2
-        self.prompt_list = ['\rmore..y.', 'e1.*', 'f.*', '\rd\r\n\rt\r\n\r' , '\rd*t\r\n\r', '\rt\r\n\r']
+        
         self.match = False
 
         while self.match == False:
-            for i in self.prompt_list:
-                #iterate trough the possible prompt
-                 
+            try:
+                
+                self.index = self.s.expect(['\rmore..y.', 'e1.*', '^f.*', '^d\r\n\rt\r\n\r' , '^d*t\r\n\r'], timeout=self.timeout)
+                self.match = True
+                #print ('Match - Timeout: {0}; index: {1}'.format(self.timeout, self.index))
+                break
+            except:
                 try:
-                    self.s.expect([i], timeout=self.timeout)
-                    self.index = self.prompt_list.index(i)
+                    self.termination = self.s.expect(['\rt\r\n\r'], timeout=self.timeout)
                     self.match = True
+                    #print ('Match - Timeout: {0}; index: {1}'.format(self.timeout, self.index))
+                    self.index = 5
                     break
                 except:
-                    pass
+                    print('Termination not fount - line 205')
             
             if self.timeout < 6:
                 self.timeout *= 2
@@ -220,7 +237,7 @@ class Ossi(object):
         if self.command is not None:
             self.cmd_raw_result = ""
             self.cmd_result = ""
-            self.failed_cmd = {}
+            self.timeout = commandEnum.search_timeout(self.command)
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
             self.index = self.all_prompt()
@@ -228,37 +245,36 @@ class Ossi(object):
 
             
                 
-            while self.index == 0:
+            while self.index == 0:      # prompt is '\rmore..y.'
         
                 self.cmd_raw_result += self.s.before
                 self.s.sendline('y')
                 self.index = self.all_prompt()
             
-
-            if self.index == 1:
+            if self.index == 1:         # prompt is  'e1.*'
                 if self.no_echo is None:
                         print '-- Command Error --'
                         self.cmd_error += 1
-                        self.failed_cmd[str(self.command)] = self.s.after
+                        self.failed_cmd[str(self.command)] = self.s.after[:-7]
 
-            elif self.index == 2:
+            elif self.index == 2:       # prompt is  '^f.*'
                 self.cmd_raw_result += self.s.after
 
             
-            elif self.index == 3:
+            elif self.index == 3:       # prompt is  '^d\r\n\rt\r\n\r' 
                 self.cmd_raw_result += self.s.before
 
-            elif self.index == 4:
+            elif self.index == 4:       # prompt is  '^d*t\r\n\r'
                 self.cmd_raw_result += self.s.before
 
-            elif self.index == 5:
+            elif self.index == 5:       # prompt is '\rt\r\n\r'
                 pass
 
             elif self.index == "error":
                 if self.no_echo is None:
                         print '-- Prompt not matched --'
                         self.cmd_error += 1
-                        self.failed_cmd[str(self.command)] = self.s.after
+                        self.failed_cmd[str(self.command)] = self.s.after[:-7]
 
             #Call command output parser
             self.cmd_result = self.data_parse(self.cmd_raw_result)
@@ -373,6 +389,14 @@ class Ossi(object):
                     self.f.write(self.output)
             except:
                 print ("Failed to open: ", self.outputfile)
+
+    def error_dump(self):
+        self.output_writer('*** ERROR DUMP ***\n')
+        for self.key in self.failed_cmd.keys():
+            self.output_writer(self.key)
+            self.output_writer('\n-------------------------\n')
+            self.output_writer(self.failed_cmd[self.key] + '\n')
+        self.output_writer('\n*** END OF ERROR DUMP ***')
 
 
 def main():
