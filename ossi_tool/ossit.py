@@ -8,7 +8,7 @@ import csv
 import re
 import commandEnum
 
-__version__ = "0.4"
+__version__ = "0.4rc01"
 
 """
 Handle imput paramaters
