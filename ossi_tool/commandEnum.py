@@ -3,6 +3,14 @@ COMMAND_TIMEOUTS = {
         'default': 0.2,
         'status': {
             'station': 6
+        },
+        'list': {
+            'station': 2
+        },
+        'display': {
+            'media-server' : 1,
+            'media-gateway' : 1,
+            'capacity': 1
         }
     }
 
@@ -40,6 +48,3 @@ def key_search(key, dictionary):
                 return match
 
 
-c = 'disp sta 340901'
-
-print search_timeout(c)

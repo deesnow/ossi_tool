@@ -8,7 +8,7 @@ import csv
 import re
 import commandEnum
 
-__version__ = "0.4rc01"
+__version__ = "0.4rc02"
 
 """
 Handle imput paramaters
@@ -203,7 +203,7 @@ class Ossi(object):
         while self.match == False:
             try:
                 
-                self.index = self.s.expect(['\rmore..y.', 'e1.*', '^f.*', '^d\r\n\rt\r\n\r' , '^d*t\r\n\r'], timeout=self.timeout)
+                self.index = self.s.expect(['\rmore..y.', 'e1.*', '\r\n\rf.*t\r\n\r', '^d\r\n\rt\r\n\r' , '^d*t\r\n\r'], timeout=self.timeout)
                 self.match = True
                 #print ('Match - Timeout: {0}; index: {1}'.format(self.timeout, self.index))
                 break
@@ -241,38 +241,47 @@ class Ossi(object):
             self.s.sendline('c'+self.command)
             self.s.sendline('t')
             self.index = self.all_prompt()
+            self.empty_data = True
             
 
             
                 
             while self.index == 0:      # prompt is '\rmore..y.'
-        
+                self.empty_data = False
                 self.cmd_raw_result += self.s.before
                 self.s.sendline('y')
                 self.index = self.all_prompt()
+                
             
             if self.index == 1:         # prompt is  'e1.*'
+                self.empty_data = False
                 if self.no_echo is None:
                         print '-- Command Error --'
                         self.cmd_error += 1
                         self.failed_cmd[str(self.command)] = self.s.after[:-7]
 
             elif self.index == 2:       # prompt is  '^f.*'
+                self.empty_data = False
                 self.cmd_raw_result += self.s.after
 
             
-            elif self.index == 3:       # prompt is  '^d\r\n\rt\r\n\r' 
+            elif self.index == 3:       # prompt is  '^d\r\n\rt\r\n\r'
+                self.empty_data = False 
                 self.cmd_raw_result += self.s.before
 
             elif self.index == 4:       # prompt is  '^d*t\r\n\r'
+                self.empty_data = False
                 self.cmd_raw_result += self.s.before
 
             elif self.index == 5:       # prompt is '\rt\r\n\r'
-                pass
+                if self.empty_data is False:
+                    self.cmd_raw_result += self.s.before
+                else:
+                    pass
 
             elif self.index == "error":
                 if self.no_echo is None:
-                        print '-- Prompt not matched --'
+                        print '-- Prompt not matched within timeout limit--'
                         self.cmd_error += 1
                         self.failed_cmd[str(self.command)] = self.s.after[:-7]
 
