@@ -8,7 +8,7 @@ import csv
 import re
 import commandEnum
 
-__version__ = "0.4rc02"
+__version__ = "0.4rc5"
 
 """
 Handle imput paramaters
@@ -203,8 +203,9 @@ class Ossi(object):
         while self.match == False:
             try:
                 
-                self.index = self.s.expect(['\rmore..y.', 'e1.*', '\r\n\rf.*t\r\n\r', '^d\r\n\rt\r\n\r' , '^d*t\r\n\r'], timeout=self.timeout)
+                self.index = self.s.expect(['\rmore\?\[y\]' , '\r\n\re1.*t\r\n\r', '\r\n\rf.*d*t\r\n\r', '^d\r\n\rt\r\n\r' , '^d*t\r\n\r'], timeout=self.timeout)
                 self.match = True
+                
                 #print ('Match - Timeout: {0}; index: {1}'.format(self.timeout, self.index))
                 break
             except:
@@ -215,7 +216,8 @@ class Ossi(object):
                     self.index = 5
                     break
                 except:
-                    print('Termination not fount - line 205')
+                    #print('Termination not fount - line 205')
+                    pass
             
             if self.timeout < 6:
                 self.timeout *= 2
@@ -347,7 +349,7 @@ class Ossi(object):
         self.lines = self.data.split('\n')
 
         for self.line in self.lines:
-            self.line = self.line.lstrip().rstrip()
+            self.line = self.line.lstrip().rstrip('\r\n')
             if re.match('^f', self.line):
                 self.fields = self.line.count('\t') + 1
                 

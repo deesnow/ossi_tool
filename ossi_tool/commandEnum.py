@@ -1,16 +1,25 @@
 
 COMMAND_TIMEOUTS = {
-        'default': 0.2,
+        'default': 1,
         'status': {
             'station': 6
         },
         'list': {
-            'station': 2
+            'station': 2,
+            'trunk' : 2,
+            'measurement' : 3
         },
         'display': {
             'media-server' : 1,
             'media-gateway' : 1,
-            'capacity': 1
+            'capacity': 2,
+            'node-name': 1
+        },
+        'clear': {
+            'amw': 0.2
+        },
+        'remove': {
+            'station': 0.2
         }
     }
 
